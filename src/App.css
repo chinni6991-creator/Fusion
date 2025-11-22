@@ -1,0 +1,31 @@
+/* App.css */
+.glow {
+  color: #6ff;
+  text-shadow:
+    0 0 5px #6ff,
+    0 0 10px #6ff,
+    0 0 20px #6ff,
+    0 0 40px #3af;
+  animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    text-shadow:
+      0 0 5px #6ff,
+      0 0 10px #6ff,
+      0 0 20px #6ff,
+      0 0 40px #3af;
+  }
+  100% {
+    text-shadow:
+      0 0 10px #6ff,
+      0 0 20px #6ff,
+      0 0 40px #6ff,
+      0 0 60px #3af;
+  }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
