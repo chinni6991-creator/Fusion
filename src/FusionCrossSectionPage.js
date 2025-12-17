@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-export default function FusionCrossSectionPage() {
+export default function FusionCrossSectionPage({ Zp, Ap, Zt, At }) {
   const [model, setModel] = useState("bass");
   const [VB, setVB] = useState("");
   const [RB, setRB] = useState("");
@@ -11,76 +11,111 @@ export default function FusionCrossSectionPage() {
   const [sigma, setSigma] = useState(null);
   const [data, setData] = useState([]);
 
-  // Retrieve reaction data
-  const stored = JSON.parse(localStorage.getItem("fusion_inputs") || "{}");
-  const { Zp = 20, Ap = 48, Zt = 82, At = 208 } = stored;
+  
 
   // --- Barrier calculations for 8 models ---
   const calculateBass = () => {
-    const RB = 1.07 * (Math.cbrt(Ap) + Math.cbrt(At));
-    const VB = 1.44 * Zp * Zt / RB;
-    const hw = 4.5 - 0.002 * Zp * Zt;
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const e2 = 1.44; // MeV·fm
+  const Rp3 = Math.cbrt(ap);
+  const Rt3 = Math.cbrt(at);
+  const RB = 1.07 * (Rp3 + Rt3) + 0.54;
+  const VB = e2 * (zp * zt) / RB - 50 / (Rp3 + Rt3);
+  const hw = 0.065 * (zp * zt) / Math.pow(Rp3 + Rt3, 1.5);
+
     return { VB, RB, hw };
   };
 
   const calculateDutt = () => {
-    const RB = 1.28 * (Math.cbrt(Ap) + Math.cbrt(At)) - 0.76 + 0.8 * (1 / Math.cbrt(Ap) + 1 / Math.cbrt(At));
-    const VB = 1.44 * Zp * Zt / RB;
-    const hw = 0.065 * Zp * Zt / Math.pow(Math.cbrt(Ap) + Math.cbrt(At), 1.5);
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const C1 = 1.28 * Math.cbrt(ap) - 0.76 + 0.8 / Math.cbrt(ap);
+  const C2 = 1.28 * Math.cbrt(at) - 0.76 + 0.8 / Math.cbrt(at);
+  const x = (zp * zt) / (Math.cbrt(ap) + Math.cbrt(at));
+  const alpha = 5.18419, beta = 0.33979, delta = 0.99903;
+  const sB = alpha * Math.exp(-beta * Math.pow(x - 2, 0.25));
+  const RB = C1 + C2 + sB;
+  const VB = delta * ((1.44 * zp * zt / RB) * (1 - 0.75 / RB)) * 0.95;
+  const hw = 0.065 * zp * zt / Math.pow(Math.cbrt(ap) + Math.cbrt(at), 1.5);
     return { VB, RB, hw };
   };
 
   const calculateManju = () => {
-    const b = 1.0;
-    const R0p = 1.24 * Math.cbrt(Ap) * (1 + 1.646 / Ap - 0.191 * ((Ap - 2 * Zp) / Ap));
-    const R0t = 1.24 * Math.cbrt(At) * (1 + 1.646 / At - 0.191 * ((At - 2 * Zt) / At));
-    const Cp = R0p * (1 - b ** 2 / R0p ** 2);
-    const Ct = R0t * (1 - b ** 2 / R0t ** 2);
-    const num = (Zp * Zt) / (Math.cbrt(Ap) + Math.cbrt(At));
-    const SB = -1.236e-7 * num ** 3 + 7.774e-5 * num ** 2 - 2.324e-2 * num + 3.759;
-    const RB = SB + Cp + Ct;
-    const VB = 1.4057 * ((Zp * Zt / RB) * (1 - 1 / RB)) + 5.4746;
-    const hw = -3.34e-7 * num ** 3 + 1.39e-4 * num ** 2 - 2.37e-2 * num + 5.67;
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const b = 1.0;
+  // Step 1: R00i
+const R00p = 1.24 * Math.cbrt(Ap) *
+  (1 + 1.646 / Ap - 0.191 * ((Ap - 2 * Zp) / Ap));
+const R00t = 1.24 * Math.cbrt(At) *
+  (1 + 1.646 / At - 0.191 * ((At - 2 * Zt) / At));
+
+// Step 2: R0i (truncate at b^2 term)
+const R0p = R00p * (1 - (7/2) * (b*b) / (R00p*R00p));
+const R0t = R00t * (1 - (7/2) * (b*b) / (R00t*R00t));
+
+// Step 3: Ci
+const Cp = R0p * (1 - (b*b) / (R0p*R0p));
+const Ct = R0t * (1 - (b*b) / (R0t*R0t));
+  const num = (zp * zt) / (Math.cbrt(ap) + Math.cbrt(at));
+  const SB = -1.236e-7 * num ** 3 + 7.774e-5 * num ** 2 - 2.324e-2 * num + 3.759;
+  const RB = SB + Cp + Ct;
+  const VB = 1.4057 * ((zp * zt / RB) * (1 - 1 / RB)) + 5.4746;
+  let hw = -3.34e-7 * num ** 3 + 1.39e-4 * num ** 2 - 2.37e-2 * num + 5.67;
+  if (hw < 0) hw = 0.5;
     return { VB, RB, hw };
   };
 
   const calculateActi = () => {
-    const Rp = 1.28 * Math.cbrt(Ap) - 0.76 + 0.8 / Math.cbrt(Ap);
-    const Rt = 1.28 * Math.cbrt(At) - 0.76 + 0.8 / Math.cbrt(At);
-    const RB = Rp + Rt;
-    const VB = 1.44 * Zp * Zt / RB;
-    const hw = Math.max(4.5 - 0.002 * Zp * Zt, 3.0);
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const b = 1.0;
+  const R0p = 1.28 * Math.cbrt(Ap) - 0.76 + 0.8 / Math.cbrt(Ap)
+    const R0t = 1.28 * Math.cbrt(At) - 0.76 + 0.8 / Math.cbrt(At);
+  const Cp = R0p * (1 - b ** 2 / R0p ** 2);
+  const Ct = R0t * (1 - b ** 2 / R0t ** 2);
+  const num = (zp * zt) / (Math.cbrt(ap) + Math.cbrt(at));
+  const SB = -1.79e-7 * num ** 3 + 1.05e-4 * num ** 2 - 2.76e-2 * num + 3.98;
+  const RB = SB + Cp + Ct;
+  const VB = 1.435 * ((zp * zt / RB) * (1 - 1 / RB)) + 1.866;
+  let hw = 1.46e-7 * num ** 3 + 9.4e-5 * num ** 2 + 1.02e-2 * num - 4.02;
+  if (hw < 0) hw = 0.5;
     return { VB, RB, hw };
   };
 
   const calculateAdam = () => {
-    const RB = 1.25 * (Math.cbrt(Ap) + Math.cbrt(At));
-    const VB = 1.44 * Zp * Zt / RB;
-    const hw = 4.0;
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const RB = 1.25 * (Math.cbrt(ap) + Math.cbrt(at));
+  const VB = 1.44 * zp * zt / RB;
+  const hw = 4.0;
     return { VB, RB, hw };
   };
 
   const calculateArora = () => {
-    const RB = 7.359 + 3.076e-3 * Ap - 1.182e-6 * Ap ** 2 + 1.567e-11 * Ap ** 3;
-    const VB = 1.44 * Zp * Zt / RB;
-    const hw = 4.5 - 0.002 * Zp * Zt;
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const RB = 7.359 + 3.076e-3 * ap - 1.182e-6 * ap ** 2 + 1.567e-11 * ap ** 3;
+  const VB = 1.44 * zp * zt / RB;
+  const hw = 4.5 - 0.002 * zp * zt;
     return { VB, RB, hw };
   };
 
   const calculateWS = () => {
-    const r0 = 1.2;
-    const a = 0.65;
-    const RB = r0 * (Math.cbrt(Ap) + Math.cbrt(At));
-    const V0 = 50;
-    const VB = V0 * (1 - Math.exp(-RB / a)) + 1.44 * Zp * Zt / RB;
-    const hw = 4.0;
+     const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const r0 = 1.2, a = 0.65, V0 = 50;
+  const RB = r0 * (Math.cbrt(ap) + Math.cbrt(at));
+  const VC = 1.44 * zp * zt / RB;
+  const VN = V0 * Math.exp(-RB / a);
+  const VB = VC + VN;
+  const hw = 0.065 * zp * zt / Math.pow(Math.cbrt(ap) + Math.cbrt(at), 1.5);
     return { VB, RB, hw };
   };
 
   const calculateProx = () => {
-    const RB = 1.17 * (Math.cbrt(Ap) + Math.cbrt(At));
-    const VB = 1.44 * Zp * Zt / RB;
-    const hw = 4.0;
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+  const r0 = 1.17, a = 0.63;
+  const gamma = 0.9517 * (1 - 1.7826 * ((ap - 2 * zp) / ap) ** 2);
+  const C1 = r0 * Math.cbrt(ap) + 0.5;
+  const C2 = r0 * Math.cbrt(at) + 0.5;
+  const RB = C1 + C2;
+  const VB = 1.44 * zp * zt / RB - 0.01 * gamma * (C1 * C2) / (C1 + C2);
+  const hw = 0.065 * zp * zt / Math.pow(Math.cbrt(ap) + Math.cbrt(at), 1.5);
     return { VB, RB, hw };
   };
 
@@ -95,50 +130,62 @@ export default function FusionCrossSectionPage() {
     prox: { name: "Proximity", func: calculateProx },
   };
 
-  // Auto-fill VB, RB, hw when model changes
-  useEffect(() => {
-    const { VB, RB, hw } = models[model].func();
-    setVB(VB.toFixed(3));
-    setRB(RB.toFixed(3));
-    setHw(hw.toFixed(3));
-  }, [model]);
+  // --- Recalculate barriers whenever inputs or model change ---
+ useEffect(() => {
+  if (![Zp, Ap, Zt, At].every(v => Number(v) > 0)) return;
+
+  const { VB, RB, hw } = models[model].func();
+
+  setVB(VB.toFixed(3));
+  setRB(RB.toFixed(3));
+  setHw(hw.toFixed(3));
+
+}, [Zp, Ap, Zt, At, model]);
+
 
   // Calculate σ for a range of Ecm
-  const calculateSigmaRange = () => {
-    const Vb = parseFloat(VB);
-    const Rb = parseFloat(RB);
-    const hbarw = parseFloat(hw);
-    if ([Vb, Rb, hbarw].some((v) => isNaN(v))) {
-      alert("Please fill all barrier fields!");
-      return;
-    }
+  // Calculate σ(E) using FULL Wong formula (1973)
+const calculateSigmaRange = () => {
+  const Vb = Number(VB);
+  const Rb = Number(RB);
+  const hbarw = Number(hw);
 
-    const dataArray = [];
-const step = 0.5;
-
-for (let Ec = Vb - 50; Ec <= Vb + 100; Ec += step) {
-  const x = (2 * Math.PI * (Ec - Vb)) / hbarw;
-
-  // Numerically stable log(1 + exp(x))
-  let logTerm;
-  if (x > 100) {
-    logTerm = x; // approximation for very large x
-  } else {
-    logTerm = Math.log(1 + Math.exp(x));
+  if ([Vb, Rb, hbarw].some(v => !isFinite(v) || v <= 0)) {
+    alert("Invalid barrier parameters");
+    return;
   }
 
-  const sigmaVal = Math.PI * Rb ** 2 * (hbarw / Ec) * logTerm * 10; // fm² -> mb
+  const dataArray = [];
+  const step = 0.5;
+const Estart = Vb - 2 * hbarw; // effective fusion onset
+  for (let Ec = Estart; Ec <= Vb + 100; Ec += step) {
+    if (Ec <= 0) continue;
 
-  dataArray.push({ 
-  Ecm: parseFloat(Ec.toFixed(2)), 
-  sigma: Math.max(sigmaVal, 1e-3) // keep as number
-});
+    const x = (2 * Math.PI * (Ec - Vb)) / hbarw;
 
-}
+   
+let sigmaVal;
+    if (x < -50) {
+      sigmaVal = 0; // numerically ~0 (deep sub-barrier)
+    } else {
+      sigmaVal =
+  (hbarw * Rb * Rb) / (2 * Ec) *
+  Math.log(1 + Math.exp(x));
 
-setData(dataArray);
+      }
 
-  };
+ sigmaVal *= 10; // fm² → mb
+
+
+    dataArray.push({
+      Ecm: +Ec.toFixed(2),
+      sigma: sigmaVal > 0 ? sigmaVal : null, // safe for log-scale
+    });
+  }
+
+  setData(dataArray);
+};
+
 
   return (
     <div style={{ padding: 20, minHeight: "100vh", background: "#050a1f", color: "#e3e8ff" }}>

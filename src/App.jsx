@@ -91,7 +91,7 @@ const handleEnergyPage = () => {
 
   return (
     <div style={{ backgroundColor:"#050a1f", color:"#e3e8ff", minHeight:"100vh", padding:"20px", textAlign:"center" }}>
-      <h1 style={{ color:"#6fa8ff" }}>⚛️ Fusion Reaction Input</h1>
+      <h1 style={{ color:"#eb6d4bff" }}> Fusion Reaction Input</h1>
 
       <div style={{ display:"flex", justifyContent:"center", gap:"50px", flexWrap:"wrap" }}>
         <div>
@@ -152,7 +152,10 @@ const handleEnergyPage = () => {
     
   </div>
 )}
-{activeSection === "fusion" && <BarrierPage />}
+{activeSection === "fusion" && (
+  <BarrierPage Zp={Zp} Ap={Ap} Zt={Zt} At={At} />
+)}
+
    
     {activeSection === "energy" && (
   <EnergyPage 
@@ -164,8 +167,14 @@ const handleEnergyPage = () => {
 )}
 
 
-    {activeSection === "cross" && <FusionCrossSectionPage />}
-
+    {activeSection === "cross" && (
+  <FusionCrossSectionPage 
+    Zp={Zp}
+    Ap={Ap}
+    Zt={Zt}
+    At={At}
+  />
+)}
 
     </div>
   );

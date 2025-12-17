@@ -180,7 +180,7 @@ export default function EnergyPage({ Zp, Ap, Zt, At }) {
   // 🌸 UI display
   return (
     <div style={{ minHeight: "100vh", background: "#040b20", color: "#e7eefc", padding: 28 }}>
-      <h1 style={{ color: "#7cc0ff", fontSize: 28, marginBottom: 16 }}>⚡ Energy Calculations</h1>
+      <h1 style={{ color: "#7cc0ff", fontSize: 28, marginBottom: 16 }}> Energy Calculations</h1>
 
       <div style={{ fontSize: 18, marginBottom: 8 }}>
         Q-value:{" "}

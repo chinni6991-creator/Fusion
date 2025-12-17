@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-function BarrierPage() {
+function BarrierPage({ Zp, Ap, Zt, At }) {
   const [model, setModel] = useState("bass");
   const [showComparison, setShowComparison] = useState(false);
-
-  // Get stored inputs from ReactionPage
-  const stored = JSON.parse(localStorage.getItem("fusion_inputs") || "{}");
-  const { Zp = 20, Ap = 48, Zt = 82, At = 208 } = stored;
-
+  
+// Ensure numeric inputs
+  const parseInputs = () => {
+    const zp = Number(Zp);
+    const ap = Number(Ap);
+    const zt = Number(Zt);
+    const at = Number(At);
+    return { zp, ap, zt, at };
+  };
+  
   // --- Fusion barrier calculations ---
   const calculateBass = (Zp, Zt, Ap, At) => {
   Zp = Number(Zp); Zt = Number(Zt); Ap = Number(Ap); At = Number(At);
@@ -29,6 +34,9 @@ function BarrierPage() {
 };
 
   const calculateDutt = (Zp, Zt, Ap, At) => {
+  Zp = Number(Zp); Zt = Number(Zt); Ap = Number(Ap); At = Number(At);
+  if (!Zp || !Zt || !Ap || !At) return { VB: 0, RB: 0, hw: 0 };
+
   // Choose proximity version (Prox 77 used here)
   const alpha = 5.18419;
   const beta = 0.33979;
@@ -41,52 +49,103 @@ function BarrierPage() {
   const sB = alpha * Math.exp(-beta * Math.pow(x - 2, 0.25));
 
   const RB = C1 + C2 + sB;
-  const VB = delta * ((1.44 * Zp * Zt / RB) * (1 - 0.75 / RB));
-  const hw = 4.0; // optional placeholder, not from Dutt 2010
+  const VB = delta * ((1.44 * Zp * Zt / RB) * (1 - 0.75 / RB)) * 0.95;
+  const hw = 0.065 * Zp * Zt / Math.pow(Math.cbrt(Ap) + Math.cbrt(At), 1.5);
 
-  return { VB, RB, hw };
+  return {
+    VB: Number(VB.toFixed(3)),
+    RB: Number(RB.toFixed(3)),
+    hw: Number(hw.toFixed(3)),
+  };
 };
 
-  const calculateManju = (Zp, Zt, Ap, At) => {
+ const calculateManju = (Zp, Zt, Ap, At) => {
+  Zp = Number(Zp); Zt = Number(Zt); Ap = Number(Ap); At = Number(At);
+  if (!Zp || !Zt || !Ap || !At) return { VB: 0, RB: 0, hw: 0 };
     const b = 1.0;
-    const R0p = 1.24 * Math.cbrt(Ap) * (1 + 1.646 / Ap - 0.191 * ((Ap - 2 * Zp) / Ap));
-    const R0t = 1.24 * Math.cbrt(At) * (1 + 1.646 / At - 0.191 * ((At - 2 * Zt) / At));
-    const Cp = R0p * (1 - (b ** 2) / (R0p ** 2));
-    const Ct = R0t * (1 - (b ** 2) / (R0t ** 2));
+    // Step 1: R00i
+const R00p = 1.24 * Math.cbrt(Ap) *
+  (1 + 1.646 / Ap - 0.191 * ((Ap - 2 * Zp) / Ap));
+const R00t = 1.24 * Math.cbrt(At) *
+  (1 + 1.646 / At - 0.191 * ((At - 2 * Zt) / At));
+
+   // Step 2: R0i (truncate at b^2 term)
+const R0p = R00p * (1 - (7/2) * (b*b) / (R00p*R00p));
+const R0t = R00t * (1 - (7/2) * (b*b) / (R00t*R00t));
+
+// Step 3: Ci
+const Cp = R0p * (1 - (b*b) / (R0p*R0p));
+const Ct = R0t * (1 - (b*b) / (R0t*R0t));
+
     const num = (Zp * Zt) / (Math.cbrt(Ap) + Math.cbrt(At));
     const SB = -1.236e-7 * num ** 3 + 7.774e-5 * num ** 2 - 2.324e-2 * num + 3.759;
     const RB = SB + Cp + Ct;
     const VB = 1.4057 * ((Zp * Zt / RB) * (1 - 1 / RB)) + 5.4746;
-    const hw = -3.34e-7 * num ** 3 + 1.39e-4 * num ** 2 - 2.37e-2 * num + 5.67;
-    return { VB, RB, hw };
+    let hw = -3.34e-7 * num ** 3 + 1.39e-4 * num ** 2 - 2.37e-2 * num + 5.67;
+    if (hw < 0) hw = 0.5; // Prevent negative hw for very heavy nuclei
+    return {
+    VB: Number(VB.toFixed(3)),
+    RB: Number(RB.toFixed(3)),
+    hw: Number(hw.toFixed(3)),
   };
-
+};
   const calculateActinide = (Zp, Zt, Ap, At) => {
+  Zp = Number(Zp);
+  Zt = Number(Zt);
+  Ap = Number(Ap);
+  At = Number(At);
+  if (!Zp || !Zt || !Ap || !At) return { VB: 0, RB: 0, hw: 0 };
     const b = 1.0;
-    const R0p = 1.24 * Math.cbrt(Ap) * (1 + 1.646 / Ap - 0.191 * ((Ap - 2 * Zp) / Ap));
-    const R0t = 1.24 * Math.cbrt(At) * (1 + 1.646 / At - 0.191 * ((At - 2 * Zt) / At));
+    const R0p = 1.28 * Math.cbrt(Ap) - 0.76 + 0.8 / Math.cbrt(Ap)
+    const R0t = 1.28 * Math.cbrt(At) - 0.76 + 0.8 / Math.cbrt(At);
     const Cp = R0p * (1 - (b ** 2) / (R0p ** 2));
     const Ct = R0t * (1 - (b ** 2) / (R0t ** 2));
     const num = (Zp * Zt) / (Math.cbrt(Ap) + Math.cbrt(At));
     const SB = -1.79e-7 * num ** 3 + 1.05e-4 * num ** 2 - 2.76e-2 * num + 3.98;
     const RB = SB + Cp + Ct;
     const VB = 1.435 * ((Zp * Zt / RB) * (1 - 1 / RB)) + 1.866;
-    const hw = 1.46e-7 * num ** 3 + 9.4e-5 * num ** 2 +1.02e-2 * num -4.02;
-    return { VB, RB, hw };
+    let hw = 1.46e-7 * num ** 3 - 9.4e-5 * num ** 2 +1.02e-2 * num -4.02;
+    if (hw < 0) hw = 0.5; // Prevent negative hw
+    return {
+    VB: Number(VB.toFixed(3)),
+    RB: Number(RB.toFixed(3)),
+    hw: Number(hw.toFixed(3)),
   };
+};
+
+  
   const calculateAdamian = (Zp, Zt, Ap, At) => {
+  Zp = Number(Zp);
+  Zt = Number(Zt);
+  Ap = Number(Ap);
+  At = Number(At);
+  if (!Zp || !Zt || !Ap || !At) return { VB: 0, RB: 0, hw: 0 };
     const RB = 1.25 * (Math.cbrt(Ap) + Math.cbrt(At));
     const VB = 1.44 * Zp * Zt / RB;
     const hw = 4.0;
-    return { VB, RB, hw };
+    return {
+    VB: Number(VB.toFixed(3)),
+    RB: Number(RB.toFixed(3)),
+    hw: Number(hw.toFixed(3)),
   };
+};
 
   const calculateArora = (Zp, Zt, Ap, At) => {
+  Zp = Number(Zp);
+  Zt = Number(Zt);
+  Ap = Number(Ap);
+  At = Number(At);
+  if (!Zp || !Zt || !Ap || !At) return { VB: 0, RB: 0, hw: 0 };
     const RB = 7.359 + 3.076e-3 * Ap - 1.182e-6 * Ap ** 2 + 1.567e-11 * Ap ** 3;
     const VB = 1.44 * Zp * Zt / RB;
     const hw = 4.5 - 0.002 * Zp * Zt;
-    return { VB, RB, hw };
+     return {
+    VB: Number(VB.toFixed(3)),
+    RB: Number(RB.toFixed(3)),
+    hw: Number(hw.toFixed(3)),
   };
+};
+
 
   const calculateWoodsSaxon = (Zp, Zt, Ap, At) => {
   // Convert inputs safely to numbers
@@ -106,7 +165,7 @@ function BarrierPage() {
   // --- Calculations ---
   const RB = r0 * (Math.cbrt(Ap) + Math.cbrt(At)); // barrier radius
   const VC = (1.44 * Zp * Zt) / RB;                // Coulomb potential
-  const VN = V0 * (1 - Math.exp(-RB / a));         // WS nuclear term
+  const VN = V0 * Math.exp(-RB / a);         // WS nuclear term
   const VB = VC + VN;                              // total barrier height
 
   // ℏω from empirical scaling (Dutt-style)
@@ -133,12 +192,12 @@ function BarrierPage() {
   const gamma = 0.9517 * (1 - 1.7826 * ((Ap - 2 * Zp) / Ap) ** 2); // surface energy coefficient
 
   // Effective radii
-  const C1 = r0 * Math.cbrt(Ap);
-  const C2 = r0 * Math.cbrt(At);
+  const C1 = r0 * Math.cbrt(Ap)+0.5;
+  const C2 = r0 * Math.cbrt(At)+0.5;
   const RB = C1 + C2;
 
   // Barrier height (Coulomb + surface correction)
-  const VB = (1.44 * Zp * Zt) / RB - 0.001 * gamma * (C1 * C2) / (C1 + C2);
+  const VB = (1.44 * Zp * Zt) / RB - 0.01 * gamma * (C1 * C2) / (C1 + C2);
 
   // Curvature (empirical Dutt-like)
   const hw = 0.065 * (Zp * Zt) / Math.pow(Math.cbrt(Ap) + Math.cbrt(At), 1.5);
@@ -165,7 +224,7 @@ function BarrierPage() {
 
   return (
     <div style={{ backgroundColor: "#050a1f", color: "#ebecf0ff", minHeight: "100vh", padding: "30px" }}>
-      <h1 style={{ color: "#6fa8ff", textAlign: "center" }}>⚡ Fusion Barrier Calculations</h1>
+      <h1 style={{ color: "#6fa8ff", textAlign: "center" }}> Fusion Barrier Calculations</h1>
 
       <div style={{ display: "flex", justifyContent: "flex-start", gap: "30px", flexWrap: "wrap" }}>
         {/* Left: Dropdown */}
