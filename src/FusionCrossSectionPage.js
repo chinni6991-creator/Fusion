@@ -7,7 +7,11 @@ export default function FusionCrossSectionPage({ Zp, Ap, Zt, At }) {
 
   const [model, setModel] = useState("bass");
   const [data, setData] = useState([]);
-
+  const [VB, setVB] = useState(0);
+  const [RB, setRB] = useState(0);
+  const [hw, setHw] = useState(0);
+  const [manual, setManual] = useState(false); // flag for manual override
+  
   const zp = Number(Zp);
   const ap = Number(Ap);
   const zt = Number(Zt);
@@ -133,38 +137,32 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
 
   // --- Recalculate barriers whenever inputs or model change ---
 
-const [VB, setVB] = useState(0);
-const [RB, setRB] = useState(0);
-const [hw, setHw] = useState(0);
-
 useEffect(() => {
-  if (!Zp || !Ap || !Zt || !At) return;
+    if (!manual && Zp && Ap && Zt && At) {
+      const result = models[model].func(zp, ap, zt, at);
+      setVB(result.VB);
+      setRB(result.RB);
+      setHw(result.hw);
+    }
+  }, [model, Zp, Ap, Zt, At, manual]);
 
-  const zp = Number(Zp);
-  const ap = Number(Ap);
-  const zt = Number(Zt);
-  const at = Number(At);
-
-  const result = models[model].func(zp, ap, zt, at);
-  setVB(result.VB);
-  setRB(result.RB);
-  setHw(result.hw);
-
-}, [Zp, Ap, Zt, At, model]);
+  // --- Manual input handlers ---
+  const handleVBChange = (e) => { setVB(Number(e.target.value)); setManual(true); };
+  const handleRBChange = (e) => { setRB(Number(e.target.value)); setManual(true); };
+  const handleHwChange = (e) => { setHw(Number(e.target.value)); setManual(true); };
 
 
   // Calculate σ for a range of Ecm
   // Calculate σ(E) using FULL Wong formula (1973)
 const calculateSigmaRange = () => {
-    if (VB <= 0 || RB <= 0 || hw <= 0) return;
-
+  if (VB <= 0 || RB <= 0 || hw <= 0) return;
   const dataArray = [];
   const step = 0.5;
-const Estart = Vb - 2 * hbarw; // effective fusion onset
-  for (let Ec = Estart; Ec <= Vb + 100; Ec += step) {
+const Estart = VB - 2 * hw; // effective fusion onset
+  for (let Ec = Estart; Ec <= VB + 100; Ec += step) {
     if (Ec <= 0) continue;
 
-    const x = (2 * Math.PI * (Ec - Vb)) / hbarw;
+    const x = (2 * Math.PI * (Ec - VB)) / hw;
 
    
 let sigmaVal;
@@ -172,7 +170,7 @@ let sigmaVal;
       sigmaVal = 0; // numerically ~0 (deep sub-barrier)
     } else {
       sigmaVal =
-  (hbarw * Rb * Rb) / (2 * Ec) *
+  (hw * RB * RB) / (2 * Ec) *
   Math.log(1 + Math.exp(x));
 
       }
@@ -188,34 +186,49 @@ let sigmaVal;
 
   setData(dataArray);
 };
-
+useEffect(() => {
+  if (VB > 0 && RB > 0 && hw > 0) {
+    calculateSigmaRange();
+  }
+}, [VB, RB, hw]);
 
   return (
     <div style={{ padding: 20, minHeight: "100vh", background: "#050a1f", color: "#e3e8ff" }}>
-      <h1 style={{ textAlign: "center", color: "#6fa8ff" }}>⚡ Fusion Cross Section</h1>
+      <h1 style={{ textAlign: "center", color: "#6fa8ff" }}> Fusion Cross Section</h1>
 
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 20, flexwrap: "wrap" }}>
         {/* Inputs */}
-        <div style={{ backgroundColor: "#0d1b3d", padding: 20, borderRadius: 12, minWidth: 220, boxShadow: "0 0 20px rgba(111,168,255,0.5)" }}>
-          <h3 style={{ color: "#b8d4ff" }}>Barrier Parameters</h3>
+        <div style={{ backgroundColor: "#0d1b3d", padding: 20, borderRadius: 12, minWidth: 280, boxShadow: "0 0 20px rgba(111,168,255,0.5)" }}>
+          <h3 style={{ color: "#b8d4ff", textAlign: "center" }}>Barrier Parameters</h3>
           <select value={model} onChange={(e) => setModel(e.target.value)} style={{ width: "100%", padding: 6, borderRadius: 6, marginBottom: 10 }}>
             {Object.keys(models).map((key) => (
               <option key={key} value={key}>{models[key].name}</option>
             ))}
           </select>
-
-       <p>Vᴮ = {VB.toFixed(3)} MeV</p>
-          <p>Rᴮ = {RB.toFixed(3)} fm</p>
-          <p>ℏω = {hw.toFixed(3)} MeV</p>
-
-
-          <button onClick={calculateSigmaRange} style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#6fa8ff", color: "#050a1f", width: "100%" }}>
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "120px 1fr",
+    rowGap: 10,
+    marginTop: 12,
+  }}
+>
+        <label>Vᴮ (MeV):</label>
+          <input type="number" value={VB} onChange={handleVBChange} style={{ width: "80px", marginBottom: 10 }} />
+          <label>Rᴮ (fm):</label>
+          <input type="number" value={RB} onChange={handleRBChange} style={{ width: "80px", marginBottom: 10 }} />
+          <label>ℏω (MeV):</label>
+          <input type="number" value={hw} onChange={handleHwChange} style={{ width: "80px", marginBottom: 10 }} />
+</div>
+{/* Button (span both columns) */}
+  <div style={{ gridColumn: "1 / -1" }}>
+          <button onClick={calculateSigmaRange} style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#6fa8ff", color: "#050a1f", width: "100%" }}>
             Calculate σ(Ecm)
           </button>
         </div>
-
+</div>
         {/* Table */}
-        <div style={{ backgroundColor: "#0d1b3d", padding: 20, borderRadius: 12, minWidth: 250, maxHeight: "80vh", overflowY: "auto", boxShadow: "0 0 20px rgba(111,168,255,0.5)" }}>
+        <div style={{ backgroundColor: "#0d1b3d", padding: 20, borderRadius: 12, minWidth: 300, maxHeight: "80vh", overflowY: "auto", boxShadow: "0 0 20px rgba(111,168,255,0.5)" }}>
           <h3 style={{ color: "#b8d4ff", textAlign: "center" }}>Ecm vs σ (mb)</h3>
           <table style={{ borderCollapse: "collapse", width: "100%", color: "#fff" }}>
             <thead>
