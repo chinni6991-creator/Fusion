@@ -7,8 +7,8 @@ export default function FusionCrossSectionPage({ Zp, Ap, Zt, At }) {
   const [VB, setVB] = useState("");
   const [RB, setRB] = useState("");
   const [hw, setHw] = useState("");
-  const [Ecm, setEcm] = useState("");
-  const [sigma, setSigma] = useState(null);
+  const [Ecm, setEcm] = useState("");// eslint-disable-line no-unused-vars
+  const [sigma, setSigma] = useState(null);// eslint-disable-line no-unused-vars
   const [data, setData] = useState([]);
 
   
@@ -89,7 +89,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateArora = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), _at = Number(At);// unused
   const RB = 7.359 + 3.076e-3 * ap - 1.182e-6 * ap ** 2 + 1.567e-11 * ap ** 3;
   const VB = 1.44 * zp * zt / RB;
   const hw = 4.5 - 0.002 * zp * zt;
@@ -109,7 +109,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
 
   const calculateProx = () => {
     const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
-  const r0 = 1.17, a = 0.63;
+  const r0 = 1.17, _a= 0.63;// unused
   const gamma = 0.9517 * (1 - 1.7826 * ((ap - 2 * zp) / ap) ** 2);
   const C1 = r0 * Math.cbrt(ap) + 0.5;
   const C2 = r0 * Math.cbrt(at) + 0.5;
@@ -140,7 +140,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   setRB(RB.toFixed(3));
   setHw(hw.toFixed(3));
 
-}, [Zp, Ap, Zt, At, model]);
+}, [Zp, Ap, Zt, At, model, models]);
 
 
   // Calculate σ for a range of Ecm
