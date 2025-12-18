@@ -1,4 +1,4 @@
-import React, { useState, useMemo} from "react";
+import React, { useState } from "react";
 
 function BarrierPage({ Zp, Ap, Zt, At }) {
   const [model, setModel] = useState("bass");
@@ -189,7 +189,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
 
   // Parameters
   const r0 = 1.17; // fm
-  const a = 0.63;  // fm, diffuseness
+ 
   const gamma = 0.9517 * (1 - 1.7826 * ((Ap - 2 * Zp) / Ap) ** 2); // surface energy coefficient
 
   // Effective radii
@@ -280,7 +280,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
               </thead>
               <tbody>
                 {Object.keys(models).map((key) => {
-                  const val = models[key].func(zp, zt, zp, zt);
+                  const val = models[key].func(zp, zt, ap, at);
                   return (
                     <tr key={key}>
                       <td style={{ border: "1px solid #6fa8ff", padding: "6px 12px" }}>{models[key].name}</td>

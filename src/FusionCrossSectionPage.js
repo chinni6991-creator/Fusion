@@ -89,7 +89,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateArora = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), _at = Number(At);// Currently unused
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt);// Currently unused
   const RB = 7.359 + 3.076e-3 * ap - 1.182e-6 * ap ** 2 + 1.567e-11 * ap ** 3;
   const VB = 1.44 * zp * zt / RB;
   const hw = 4.5 - 0.002 * zp * zt;
@@ -109,7 +109,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
 
   const calculateProx = () => {
     const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
-  const r0 = 1.17, _a= 0.63;// unused
+  const r0 = 1.17;
   const gamma = 0.9517 * (1 - 1.7826 * ((ap - 2 * zp) / ap) ** 2);
   const C1 = r0 * Math.cbrt(ap) + 0.5;
   const C2 = r0 * Math.cbrt(at) + 0.5;
@@ -118,7 +118,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   const hw = 0.065 * zp * zt / Math.pow(Math.cbrt(ap) + Math.cbrt(at), 1.5);
     return { VB, RB, hw };
   };
-
+// eslint-disable-next-line react-hooks/exhaustive-deps
   const models = useMemo(() => ({
     bass: { name: "Bass (1973)", func: calculateBass },
     dutt: { name: "Dutt–Puri (2010)", func: calculateDutt },
