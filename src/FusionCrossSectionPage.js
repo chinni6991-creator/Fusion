@@ -1,21 +1,22 @@
 // src/FusionCrossSectionPage.js
 import React, { useState, useEffect, useMemo } from "react";
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function FusionCrossSectionPage({ Zp, Ap, Zt, At }) {
+
   const [model, setModel] = useState("bass");
-  const [VB, setVB] = useState("");
-  const [RB, setRB] = useState("");
-  const [hw, setHw] = useState("");
-  const [Ecm, setEcm] = useState("");// eslint-disable-line no-unused-vars
-  const [sigma, setSigma] = useState(null);// eslint-disable-line no-unused-vars
   const [data, setData] = useState([]);
 
-  
+  const zp = Number(Zp);
+  const ap = Number(Ap);
+  const zt = Number(Zt);
+  const at = Number(At);
+
 
   // --- Barrier calculations for 8 models ---
   const calculateBass = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+ if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 };   
   const e2 = 1.44; // MeV·fm
   const Rp3 = Math.cbrt(ap);
   const Rt3 = Math.cbrt(at);
@@ -27,7 +28,7 @@ export default function FusionCrossSectionPage({ Zp, Ap, Zt, At }) {
   };
 
   const calculateDutt = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+    if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 };
   const C1 = 1.28 * Math.cbrt(ap) - 0.76 + 0.8 / Math.cbrt(ap);
   const C2 = 1.28 * Math.cbrt(at) - 0.76 + 0.8 / Math.cbrt(at);
   const x = (zp * zt) / (Math.cbrt(ap) + Math.cbrt(at));
@@ -40,7 +41,7 @@ export default function FusionCrossSectionPage({ Zp, Ap, Zt, At }) {
   };
 
   const calculateManju = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+   if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 }; 
   const b = 1.0;
   // Step 1: R00i
 const R00p = 1.24 * Math.cbrt(Ap) *
@@ -65,7 +66,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateActi = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+   if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 }; 
   const b = 1.0;
   const R0p = 1.28 * Math.cbrt(Ap) - 0.76 + 0.8 / Math.cbrt(Ap)
     const R0t = 1.28 * Math.cbrt(At) - 0.76 + 0.8 / Math.cbrt(At);
@@ -81,7 +82,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateAdam = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+   if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 };
   const RB = 1.25 * (Math.cbrt(ap) + Math.cbrt(at));
   const VB = 1.44 * zp * zt / RB;
   const hw = 4.0;
@@ -89,7 +90,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateArora = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt);// Currently unused
+  if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 };  
   const RB = 7.359 + 3.076e-3 * ap - 1.182e-6 * ap ** 2 + 1.567e-11 * ap ** 3;
   const VB = 1.44 * zp * zt / RB;
   const hw = 4.5 - 0.002 * zp * zt;
@@ -97,7 +98,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateWS = () => {
-     const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
+   if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 }; 
   const r0 = 1.2, a = 0.65, V0 = 50;
   const RB = r0 * (Math.cbrt(ap) + Math.cbrt(at));
   const VC = 1.44 * zp * zt / RB;
@@ -108,8 +109,8 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateProx = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), at = Number(At);
-  const r0 = 1.17;
+  if (!zp || !zt || !ap || !at) return { VB: 0, RB: 0, hw: 0 };  
+  const r0 = 1.17, a = 0.63;
   const gamma = 0.9517 * (1 - 1.7826 * ((ap - 2 * zp) / ap) ** 2);
   const C1 = r0 * Math.cbrt(ap) + 0.5;
   const C2 = r0 * Math.cbrt(at) + 0.5;
@@ -118,8 +119,8 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   const hw = 0.065 * zp * zt / Math.pow(Math.cbrt(ap) + Math.cbrt(at), 1.5);
     return { VB, RB, hw };
   };
-/* eslint-disable-next-line */
-  const models = useMemo(() => ({
+
+  const models = {
     bass: { name: "Bass (1973)", func: calculateBass },
     dutt: { name: "Dutt–Puri (2010)", func: calculateDutt },
     manju: { name: "Manjunatha (2018)", func: calculateManju },
@@ -128,32 +129,34 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
     arora: { name: "Arora–Puri–Gupta (2000)", func: calculateArora },
     ws: { name: "Woods–Saxon", func: calculateWS },
     prox: { name: "Proximity", func: calculateProx },
-  }), []);
+  };
 
   // --- Recalculate barriers whenever inputs or model change ---
- useEffect(() => {
-  if (![Zp, Ap, Zt, At].every(v => Number(v) > 0)) return;
 
-  const { VB, RB, hw } = models[model].func();
+const [VB, setVB] = useState(0);
+const [RB, setRB] = useState(0);
+const [hw, setHw] = useState(0);
 
-  setVB(VB.toFixed(3));
-  setRB(RB.toFixed(3));
-  setHw(hw.toFixed(3));
+useEffect(() => {
+  if (!Zp || !Ap || !Zt || !At) return;
 
-}, [Zp, Ap, Zt, At, model, models]);
+  const zp = Number(Zp);
+  const ap = Number(Ap);
+  const zt = Number(Zt);
+  const at = Number(At);
+
+  const result = models[model].func(zp, ap, zt, at);
+  setVB(result.VB);
+  setRB(result.RB);
+  setHw(result.hw);
+
+}, [Zp, Ap, Zt, At, model]);
 
 
   // Calculate σ for a range of Ecm
   // Calculate σ(E) using FULL Wong formula (1973)
 const calculateSigmaRange = () => {
-  const Vb = Number(VB);
-  const Rb = Number(RB);
-  const hbarw = Number(hw);
-
-  if ([Vb, Rb, hbarw].some(v => !isFinite(v) || v <= 0)) {
-    alert("Invalid barrier parameters");
-    return;
-  }
+    if (VB <= 0 || RB <= 0 || hw <= 0) return;
 
   const dataArray = [];
   const step = 0.5;
@@ -201,9 +204,10 @@ let sigmaVal;
             ))}
           </select>
 
-          <label>Vᴮ (MeV): <input type="number" value={VB} onChange={(e) => setVB(e.target.value)} style={{ width: "80px" }} /></label><br />
-          <label>Rᴮ (fm): <input type="number" value={RB} onChange={(e) => setRB(e.target.value)} style={{ width: "80px" }} /></label><br />
-          <label>ℏω (MeV): <input type="number" value={hw} onChange={(e) => setHw(e.target.value)} style={{ width: "80px" }} /></label><br />
+       <p>Vᴮ = {VB.toFixed(3)} MeV</p>
+          <p>Rᴮ = {RB.toFixed(3)} fm</p>
+          <p>ℏω = {hw.toFixed(3)} MeV</p>
+
 
           <button onClick={calculateSigmaRange} style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#6fa8ff", color: "#050a1f", width: "100%" }}>
             Calculate σ(Ecm)

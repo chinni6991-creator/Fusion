@@ -37,6 +37,7 @@ const handleEnergyPage = () => {
       },
     });
   }, []);
+  
 
   const getElement = (Z) => {
     const elements = {
