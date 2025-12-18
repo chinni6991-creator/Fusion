@@ -9,8 +9,8 @@
     "@testing-library/user-event": "^14.6.1",
     "axios": "^1.13.2",
     "papaparse": "^5.5.3",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-router-dom": "^7.11.0",
     "react-scripts": "^5.0.1",
     "recharts": "^3.3.0",
@@ -26,7 +26,6 @@
   "engines": {
     "node": "20.x"
   },
-  
   "browserslist": {
     "production": [
       ">0.2%",
