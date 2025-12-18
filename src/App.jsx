@@ -91,7 +91,7 @@ const handleEnergyPage = () => {
 
   return (
     <div style={{ backgroundColor:"#050a1f", color:"#e3e8ff", minHeight:"100vh", padding:"20px", textAlign:"center" }}>
-      <h1 style={{ color:"#eb6d4bff" }}> Fusion Reaction Input</h1>
+      <h1 style={{ color:"#ee4f55ff" }}> Fusion Reaction Input</h1>
 
       <div style={{ display:"flex", justifyContent:"center", gap:"50px", flexWrap:"wrap" }}>
         <div>
@@ -128,7 +128,7 @@ const handleEnergyPage = () => {
   <div style={{ marginTop:"25px", display:"flex", justifyContent:"center", gap:"20px", flexWrap:"wrap" }}>
     {/* --- Entrance Channel Parameters --- */}
     <div style={boxStyle}>
-      <h2 style={{ color:"#c8dc11ff" }}>🔹 Entrance Channel Parameters</h2>
+      <h2 style={{ color:"#efe4bbff" }}>🔹 Entrance Channel Parameters</h2>
       <p>Mass Asymmetry |η<sub>m</sub>|: <strong>{alpha_m}</strong></p>
       <p>Charge Asymmetry |α<sub>z</sub>|: <strong>{alpha_z}</strong></p>
       <p>Product Z₁Z₂: <strong>{prodZ}</strong></p>
@@ -142,7 +142,7 @@ const handleEnergyPage = () => {
 
     {/* --- Deformations --- */}
     <div style={boxStyle}>
-      <h2 style={{ color:"#c8dc11ff" }}>🔹 Deformations</h2>
+      <h2 style={{ color:"#f2a8a8ff" }}>🔹 Deformations</h2>
       <p>Projectile β₂: <strong>{betaProjectile.beta2}</strong></p>
       <p>Projectile β₄: <strong>{betaProjectile.beta4}</strong></p>
       <p>Target β₂: <strong>{betaTarget.beta2}</strong></p>

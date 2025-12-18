@@ -118,7 +118,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   const hw = 0.065 * zp * zt / Math.pow(Math.cbrt(ap) + Math.cbrt(at), 1.5);
     return { VB, RB, hw };
   };
-// eslint-disable-next-line react-hooks/exhaustive-deps
+/* eslint-disable-next-line */
   const models = useMemo(() => ({
     bass: { name: "Bass (1973)", func: calculateBass },
     dutt: { name: "Dutt–Puri (2010)", func: calculateDutt },
