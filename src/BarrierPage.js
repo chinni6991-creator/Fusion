@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo} from "react";
 
 function BarrierPage({ Zp, Ap, Zt, At }) {
   const [model, setModel] = useState("bass");
@@ -12,7 +12,8 @@ function BarrierPage({ Zp, Ap, Zt, At }) {
     const at = Number(At);
     return { zp, ap, zt, at };
   };
-  
+  const { zp, ap, zt, at } = parseInputs();
+
   // --- Fusion barrier calculations ---
   const calculateBass = (Zp, Zt, Ap, At) => {
   Zp = Number(Zp); Zt = Number(Zt); Ap = Number(Ap); At = Number(At);
@@ -220,7 +221,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
     prox: { name: "Proximity", func: calculateProximity },
   };
 
-  const selected = models[model].func(Zp, Zt, Ap, At);
+  const selected = models[model].func(zp, zt, ap, at);
 
   return (
     <div style={{ backgroundColor: "#050a1f", color: "#ebecf0ff", minHeight: "100vh", padding: "30px" }}>
@@ -279,7 +280,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
               </thead>
               <tbody>
                 {Object.keys(models).map((key) => {
-                  const val = models[key].func(Zp, Zt, Ap, At);
+                  const val = models[key].func(zp, zt, zp, zt);
                   return (
                     <tr key={key}>
                       <td style={{ border: "1px solid #6fa8ff", padding: "6px 12px" }}>{models[key].name}</td>

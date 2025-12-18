@@ -1,5 +1,5 @@
 // src/FusionCrossSectionPage.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function FusionCrossSectionPage({ Zp, Ap, Zt, At }) {
@@ -89,7 +89,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
   };
 
   const calculateArora = () => {
-    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), _at = Number(At);// unused
+    const zp = Number(Zp), ap = Number(Ap), zt = Number(Zt), _at = Number(At);// Currently unused
   const RB = 7.359 + 3.076e-3 * ap - 1.182e-6 * ap ** 2 + 1.567e-11 * ap ** 3;
   const VB = 1.44 * zp * zt / RB;
   const hw = 4.5 - 0.002 * zp * zt;
@@ -119,7 +119,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
     return { VB, RB, hw };
   };
 
-  const models = {
+  const models = useMemo(() => ({
     bass: { name: "Bass (1973)", func: calculateBass },
     dutt: { name: "Dutt–Puri (2010)", func: calculateDutt },
     manju: { name: "Manjunatha (2018)", func: calculateManju },
@@ -128,7 +128,7 @@ const Ct = R0t * (1 - (b*b) / (R0t*R0t));
     arora: { name: "Arora–Puri–Gupta (2000)", func: calculateArora },
     ws: { name: "Woods–Saxon", func: calculateWS },
     prox: { name: "Proximity", func: calculateProx },
-  };
+  }), []);
 
   // --- Recalculate barriers whenever inputs or model change ---
  useEffect(() => {

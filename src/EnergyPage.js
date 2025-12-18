@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Papa from "papaparse";
 
 export default function EnergyPage({ Zp, Ap, Zt, At }) {
@@ -8,12 +8,12 @@ export default function EnergyPage({ Zp, Ap, Zt, At }) {
   const [Elab, setElab] = useState("");
   const [Ecm, setEcm] = useState("");
   const [EStar, setEStar] = useState("");
-  const [activeField, setActiveField] = useState("");
+  const [activeField, setActiveField] = useState("");// eslint-disable-line no-unused-vars
   const [loading, setLoading] = useState(true);
 
-  const reaction = { Zp, Ap, Zt, At };
-
-
+  
+  // ✅ reaction object memoized
+const reaction = useMemo(() => ({ Zp, Ap, Zt, At }), [Zp, Ap, Zt, At]);
   // 🌸 Load mass_excess.csv file
   useEffect(() => {
     setLoading(true);
